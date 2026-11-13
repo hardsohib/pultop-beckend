@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="uz" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PulTop — Tizimga kirish</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = { darkMode: 'class' }
+    </script>
+</head>
+<body class="bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen flex flex-col justify-between transition-colors duration-200">
+
+    <!-- Top Header -->
+    <header class="w-full max-w-6xl mx-auto px-4 py-3.5 flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+            <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-emerald-500 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-emerald-500/25">
+                <i class="fa-solid fa-wallet"></i>
+            </div>
+            <div>
+                <span class="text-lg sm:text-xl font-extrabold tracking-tight">Pul<span class="text-emerald-500">Top</span></span>
+                <span class="block text-[10px] text-slate-400 font-semibold -mt-1">Daromad platformasi</span>
+            </div>
+        </div>
+
+        <button onclick="toggleTheme()" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300">
+            <i id="themeIcon" class="fa-solid fa-sun text-amber-400"></i>
+        </button>
+    </header>
+
+    <!-- Main Auth Card -->
+    <main class="flex-1 flex items-center justify-center p-3.5 sm:p-4">
+        <div class="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl p-5 sm:p-8">
+            
+            <div class="text-center mb-5">
+                <h1 id="authHeading" class="text-xl sm:text-2xl font-extrabold">Xush kelibsiz!</h1>
+                <p id="authSubheading" class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                    Telefon raqamingiz va parolingiz orqali tizimga kiring
+                </p>
+            </div>
+
+            <!-- Referral Invite Badge (Shown automatically if ?ref= is in URL) -->
+            <div id="refInviteBadge" class="hidden mb-4 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-500 text-xs font-bold flex items-center gap-2">
+                <i class="fa-solid fa-gift text-base"></i>
+                <span>Siz do'stingiz taklifi orqali keldingiz! Ro'yxatdan o'tib vazifa bajaring.</span>
+            </div>
+
+            <!-- Tabs -->
+            <div class="grid grid-cols-2 gap-1.5 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl mb-5">
+                <button type="button" id="tabLogin" onclick="switchTab('login')" class="py-2.5 text-xs sm:text-sm font-bold rounded-lg bg-white dark:bg-slate-900 text-emerald-500 shadow-sm transition">
+                    Kirish
+                </button>
+                <button type="button" id="tabRegister" onclick="switchTab('register')" class="py-2.5 text-xs sm:text-sm font-bold rounded-lg text-slate-500 dark:text-slate-400">
+                    Ro'yxatdan o'tish
+                </button>
+            </div>
+
+            <div id="alertBox" class="hidden mb-4 p-3 rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-2"></div>
+
+            <!-- LOGIN FORM -->
+            <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-[11px] font-bold uppercase text-slate-400 mb-1.5">Telefon raqamingiz</label>
+                    <div class="relative flex items-center">
+                        <span class="absolute left-3.5 text-slate-400 font-bold text-sm select-none">+998</span>
+                        <input type="tel" id="loginPhone" required maxlength="12" placeholder="90 123 45 67"
+                            oninput="formatPhone(this)"
+                            class="w-full pl-14 pr-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:border-emerald-500 font-semibold text-sm sm:text-base">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-bold uppercase text-slate-400 mb-1.5">Parol</label>
+                    <div class="relative">
+                        <input type="password" id="loginPassword" required minlength="4" placeholder="Parolingizni kiriting"
+                            class="w-full pl-4 pr-10 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:border-emerald-500 font-semibold text-sm sm:text-base">
+                        <button type="button" onclick="togglePass('loginPassword', this)" class="absolute right-3.5 top-3.5 text-slate-400">
+                            <i class="fa-regular fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between pt-1">
+                    <label class="flex items-center gap-2 cursor-pointer select-none">
+                        <input type="checkbox" id="rememberMe" checked class="w-4 h-4 rounded accent-emerald-500">
+                        <span class="text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-300">Meni eslab qolish</span>
+                    </label>
+                    <button type="button" onclick="openForgotModal()" class="text-xs sm:text-sm font-bold text-emerald-500 hover:underline">
+                        Parolni unutdingizmi?
+                    </button>
+                </div>
+
+                <button type="submit" class="w-full py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-sm sm:text-base shadow-lg shadow-emerald-500/25 transition">
+                    Tizimga kirish <i class="fa-solid fa-arrow-right ml-1"></i>
+                </button>
+            </form>
+
+            <!-- REGISTER FORM -->
+            <form id="registerForm" onsubmit="handleRegister(event)" class="space-y-3.5 hidden">
+                <div>
+                    <label class="block text-[11px] font-bold uppercase text-slate-400 mb-1">Telefon raqamingiz</label>
+                    <div class="relative flex items-center">
+                        <span class="absolute left-3.5 text-slate-400 font-bold text-sm select-none">+998</span>
+                        <input type="tel" id="regPhone" required maxlength="12" placeholder="90 123 45 67"
+                            oninput="formatPhone(this)"
+                            class="w-full pl-14 pr-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:border-emerald-500 font-semibold text-sm sm:text-base">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-bold uppercase text-slate-400 mb-1">Yangi parol</label>
+                    <div class="relative">
+                        <input type="password" id="regPassword" required minlength="4" placeholder="Kamida 4 ta belgi"
+                            class="w-full pl-4 pr-10 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:border-emerald-500 font-semibold text-sm sm:text-base">
+                        <button type="button" onclick="togglePass('regPassword', this)" class="absolute right-3.5 top-3.5 text-slate-400">
+                            <i class="fa-regular fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-bold uppercase text-slate-400 mb-1">Parolni tasdiqlang</label>
+                    <div class="relative">
+                        <input type="password" id="regPasswordConfirm" required minlength="4" placeholder="Parolni qayta kiriting"
+                            class="w-full pl-4 pr-10 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-none focus:border-emerald-500 font-semibold text-sm sm:text-base">
+                        <button type="button" onclick="togglePass('regPasswordConfirm', this)" class="absolute right-3.5 top-3.5 text-slate-400">
+                            <i class="fa-regular fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-bold uppercase text-slate-400 mb-1">Referal kod (Ixtiyoriy)</label>
+                    <input type="text" id="regReferralCode" placeholder="Masalan: U-1234"
+                        class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-mono font-bold text-emerald-500">
+                </div>
+
+                <label class="flex items-center gap-2 cursor-pointer select-none pt-1">
+                    <input type="checkbox" id="regRememberMe" checked class="w-4 h-4 rounded accent-emerald-500">
+                    <span class="text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-300">Meni doim eslab qolish</span>
+                </label>
+
+                <button type="submit" class="w-full py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-sm sm:text-base shadow-lg shadow-emerald-500/25 transition">
+                    Ro'yxatdan o'tish <i class="fa-solid fa-user-plus ml-1"></i>
+                </button>
+            </form>
+        </div>
+    </main>
+
+    <!-- Forgot Password Modal -->
+    <div id="forgotModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-sm w-full p-5 text-center shadow-2xl">
+            <div class="w-12 h-12 rounded-full bg-sky-500/10 text-sky-500 flex items-center justify-center text-2xl mx-auto mb-3">
+                <i class="fa-brands fa-telegram"></i>
+            </div>
+            <h3 class="text-base font-extrabold mb-1.5">Parolni unutdingizmi?</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mb-5">
+                Parolingizni tiklash uchun Telegram orqali adminimizga telefon raqamingizni yozib yuboring.
+            </p>
+            <div class="flex gap-2.5">
+                <button type="button" onclick="closeForgotModal()" class="flex-1 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 font-bold text-xs">Yopish</button>
+                <a id="tgAdminLink" href="https://t.me/YOUR_ADMIN_USERNAME" target="_blank" class="flex-1 py-2.5 rounded-xl bg-sky-500 text-white font-bold text-xs flex items-center justify-center gap-1.5">
+                    <i class="fa-brands fa-telegram"></i> Adminga yozish
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <footer class="text-center py-3 text-[11px] text-slate-400">
+        © 2026 PulTop — Barcha huquqlar himoyalangan
+    </footer>
+
+    <script>
+        const API_CONFIG = {
+            USE_BACKEND_API: false,
+            BASE_URL: "https://your-backend-domain.com/api",
+            TELEGRAM_ADMIN_URL: "https://t.me/YOUR_ADMIN_USERNAME", // <-- PUT YOUR TELEGRAM ADMIN LINK HERE
+            ADMIN_PHONE: "949903424",
+            ADMIN_PASS: "Soha1212"
+        };
+
+        document.getElementById('tgAdminLink').href = API_CONFIG.TELEGRAM_ADMIN_URL;
+
+        function getUsersDB() {
+            return JSON.parse(localStorage.getItem('pultop_db_users')) || [];
+        }
+
+        function saveUsersDB(users) {
+            localStorage.setItem('pultop_db_users', JSON.stringify(users));
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            if (localStorage.getItem('pultop_theme') === 'light') {
+                document.documentElement.classList.remove('dark');
+                document.getElementById('themeIcon').className = 'fa-solid fa-moon text-slate-700';
+            }
+
+            // Detect Referral Code from URL (?ref=U-XXXX)
+            const params = new URLSearchParams(window.location.search);
+            const refCode = params.get('ref');
+            if (refCode) {
+                document.getElementById('regReferralCode').value = refCode;
+                document.getElementById('refInviteBadge').classList.remove('hidden');
+                switchTab('register');
+            }
+
+            // Auto-Redirect if remembered
+            const adminRem = localStorage.getItem('pultop_admin_remember') || sessionStorage.getItem('pultop_admin_session');
+            if (adminRem) {
+                window.location.href = 'admin.html';
+                return;
+            }
+
+            const savedUserStr = localStorage.getItem('pultop_remembered_user') || sessionStorage.getItem('pultop_active_user');
+            if (savedUserStr) {
+                try {
+                    const savedUser = JSON.parse(savedUserStr);
+                    const found = getUsersDB().find(u => u.id === savedUser.id && u.active !== false);
+                    if (found) {
+                        window.location.href = 'app.html';
+                        return;
+                    }
+                } catch (e) {}
+            }
+        });
+
+        function formatPhone(input) {
+            let nums = input.value.replace(/\D/g, '').substring(0, 9);
+            let formatted = '';
+            if (nums.length > 0) formatted += nums.substring(0, 2);
+            if (nums.length > 2) formatted += ' ' + nums.substring(2, 5);
+            if (nums.length > 5) formatted += ' ' + nums.substring(5, 7);
+            if (nums.length > 7) formatted += ' ' + nums.substring(7, 9);
+            input.value = formatted;
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            hideAlert();
+
+            const rawPhone = document.getElementById('loginPhone').value.trim();
+            const cleanDigits = rawPhone.replace(/\D/g, '');
+            const password = document.getElementById('loginPassword').value;
+            const remember = document.getElementById('rememberMe').checked;
+
+            if (cleanDigits.length !== 9) {
+                return showAlert("9 xonali telefon raqamni to'liq kiriting!", "error");
+            }
+
+            // 1. Admin Login Check (949903424 / Soha1212)
+            if (cleanDigits === API_CONFIG.ADMIN_PHONE) {
+                if (password === API_CONFIG.ADMIN_PASS) {
+                    const adminData = { id: "ADMIN-1", phone: "+998 94 990 34 24", role: "admin" };
+                    sessionStorage.setItem('pultop_admin_session', JSON.stringify(adminData));
+                    if (remember) localStorage.setItem('pultop_admin_remember', JSON.stringify(adminData));
+                    window.location.href = 'admin.html';
+                    return;
+                } else {
+                    return showAlert("Admin paroli noto'g'ri!", "error");
+                }
+            }
+
+            // 2. Strict Registered User Check
+            const user = getUsersDB().find(u => u.cleanPhone === cleanDigits);
+            if (!user) {
+                return showAlert("Bu raqam ro'yxatdan o'tmagan! Avval ro'yxatdan o'ting.", "error");
+            }
+            if (user.password !== password) {
+                return showAlert("Parol noto'g'ri!", "error");
+            }
+            if (user.active === false) {
+                return showAlert("Hisobingiz Admin tomonidan bloklangan!", "error");
+            }
+
+            const sessionUser = { id: user.id, cleanPhone: user.cleanPhone, phone: user.phone, role: 'user' };
+            sessionStorage.setItem('pultop_active_user', JSON.stringify(sessionUser));
+            if (remember) localStorage.setItem('pultop_remembered_user', JSON.stringify(sessionUser));
+            window.location.href = 'app.html';
+        }
+
+        function handleRegister(e) {
+            e.preventDefault();
+            hideAlert();
+
+            const rawPhone = document.getElementById('regPhone').value.trim();
+            const cleanDigits = rawPhone.replace(/\D/g, '');
+            const password = document.getElementById('regPassword').value;
+            const confirmPass = document.getElementById('regPasswordConfirm').value;
+            const refCode = document.getElementById('regReferralCode').value.trim();
+            const remember = document.getElementById('regRememberMe').checked;
+
+            if (cleanDigits.length !== 9) return showAlert("9 xonali telefon raqamni to'liq kiriting!", "error");
+            if (cleanDigits === API_CONFIG.ADMIN_PHONE) return showAlert("Bu raqam Admin uchun band qilingan!", "error");
+            if (password !== confirmPass) return showAlert("Parollar mos kelmadi!", "error");
+
+            const users = getUsersDB();
+            if (users.some(u => u.cleanPhone === cleanDigits)) {
+                return showAlert("Bu raqam allaqachon ro'yxatdan o'tgan!", "error");
+            }
+
+            // Verify referral code if entered
+            let validReferrerId = null;
+            if (refCode) {
+                const inviter = users.find(u => u.id.toLowerCase() === refCode.toLowerCase());
+                if (inviter) validReferrerId = inviter.id;
+            }
+
+            const now = new Date().toISOString().slice(0, 16).replace('T', ' ');
+            const newUser = {
+                id: "U-" + Math.floor(1000 + Math.random() * 9000),
+                cleanPhone: cleanDigits,
+                phone: "+998 " + rawPhone,
+                password: password,
+                balance: 0,
+                active: true,
+                joinedAt: now,
+                referredBy: validReferrerId,
+                firstTaskBonusPaid: false,
+                contributedToReferrer: 0,
+                referral5000BonusEarned: 0,
+                referral10PercentEarned: 0,
+                completedTasks: []
+            };
+
+            users.unshift(newUser);
+            saveUsersDB(users);
+
+            const sessionUser = { id: newUser.id, cleanPhone: newUser.cleanPhone, phone: newUser.phone, role: 'user' };
+            sessionStorage.setItem('pultop_active_user', JSON.stringify(sessionUser));
+            if (remember) localStorage.setItem('pultop_remembered_user', JSON.stringify(sessionUser));
+            window.location.href = 'app.html';
+        }
+
+        function switchTab(tab) {
+            hideAlert();
+            const isLogin = tab === 'login';
+            document.getElementById('loginForm').classList.toggle('hidden', !isLogin);
+            document.getElementById('registerForm').classList.toggle('hidden', isLogin);
+            document.getElementById('tabLogin').className = isLogin
+                ? "py-2.5 text-xs sm:text-sm font-bold rounded-lg bg-white dark:bg-slate-900 text-emerald-500 shadow-sm transition"
+                : "py-2.5 text-xs sm:text-sm font-bold rounded-lg text-slate-500 dark:text-slate-400";
+            document.getElementById('tabRegister').className = !isLogin
+                ? "py-2.5 text-xs sm:text-sm font-bold rounded-lg bg-white dark:bg-slate-900 text-emerald-500 shadow-sm transition"
+                : "py-2.5 text-xs sm:text-sm font-bold rounded-lg text-slate-500 dark:text-slate-400";
+        }
+
+        function showAlert(msg, type) {
+            const box = document.getElementById('alertBox');
+            box.innerHTML = `<i class="fa-solid ${type === 'error' ? 'fa-circle-exclamation' : 'fa-circle-check'}"></i><span>${msg}</span>`;
+            box.className = `mb-4 p-3 rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-2 ${
+                type === 'error' ? 'bg-rose-500/10 text-rose-500 border border-rose-500/20' : 'bg-emerald-500/10 text-emerald-500'
+            }`;
+            box.classList.remove('hidden');
+        }
+        function hideAlert() { document.getElementById('alertBox').classList.add('hidden'); }
+        function togglePass(id, btn) {
+            const input = document.getElementById(id);
+            input.type = input.type === 'password' ? 'text' : 'password';
+        }
+        function openForgotModal() {
+            document.getElementById('forgotModal').classList.remove('hidden');
+            document.getElementById('forgotModal').classList.add('flex');
+        }
+        function closeForgotModal() {
+            document.getElementById('forgotModal').classList.add('hidden');
+            document.getElementById('forgotModal').classList.remove('flex');
+        }
+        function toggleTheme() {
+            const html = document.documentElement;
+            const icon = document.getElementById('themeIcon');
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                localStorage.setItem('pultop_theme', 'light');
+                icon.className = 'fa-solid fa-moon text-slate-700';
+            } else {
+                html.classList.add('dark');
+                localStorage.setItem('pultop_theme', 'dark');
+                icon.className = 'fa-solid fa-sun text-amber-400';
+            }
+        }
+    </script>
+</body>
+</html>

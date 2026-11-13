@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="uz" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PulTop — Vazifa bajarib pul ishlang</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = { darkMode: 'class' }
+    </script>
+    <style>
+        /* Clean mobile scrollbars & native app feel */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        body { -webkit-tap-highlight-color: transparent; }
+    </style>
+</head>
+<body class="bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen flex flex-col transition-colors duration-200 pb-24 lg:pb-6">
+
+    <!-- ================= TOP NAVBAR (COMPACT ON MOBILE, CLEAN ON PC) ================= -->
+    <header class="sticky top-0 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
+        <div class="max-w-[1400px] mx-auto px-3 sm:px-6 h-16 flex items-center justify-between gap-2">
+            <!-- Brand & Phone -->
+            <div class="flex items-center gap-2.5 min-w-0">
+                <div class="w-9 h-9 sm:w-10 sm:h-10 shrink-0 rounded-xl bg-emerald-500 flex items-center justify-center text-white font-bold text-base sm:text-lg shadow-md shadow-emerald-500/25">
+                    <i class="fa-solid fa-wallet"></i>
+                </div>
+                <div class="truncate">
+                    <span class="font-extrabold text-base sm:text-lg tracking-tight block leading-none">Pul<span class="text-emerald-500">Top</span></span>
+                    <span id="topUserPhone" class="block text-[11px] text-slate-400 font-semibold truncate mt-0.5">+998 ...</span>
+                </div>
+            </div>
+
+            <!-- Right Corner: Money Balance + Theme + Logout -->
+            <div class="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+                <button onclick="switchTab('wallet')" class="flex items-center gap-2 px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/30 hover:bg-emerald-500/20 active:scale-95 transition">
+                    <i class="fa-solid fa-coins text-emerald-500 text-sm sm:text-base"></i>
+                    <div class="text-right">
+                        <span class="hidden sm:block text-[9px] uppercase font-bold text-slate-400 leading-none">Asosiy Balans</span>
+                        <span id="topBalance" class="font-extrabold text-xs sm:text-base text-emerald-500 whitespace-nowrap">0 so'm</span>
+                    </div>
+                </button>
+
+                <button onclick="toggleTheme()" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:text-emerald-500 transition" title="Kun/Tun">
+                    <i id="themeIcon" class="fa-solid fa-sun text-amber-400 text-sm sm:text-base"></i>
+                </button>
+
+                <button onclick="logoutUser()" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white flex items-center justify-center transition" title="Chiqish">
+                    <i class="fa-solid fa-right-from-bracket text-sm sm:text-base"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- ================= MAIN LAYOUT ================= -->
+    <div class="flex-1 max-w-[1400px] w-full mx-auto px-3 sm:px-6 pt-4 sm:pt-6 flex flex-col lg:flex-row gap-6">
+
+        <!-- Left Sidebar (PC Only) -->
+        <aside class="hidden lg:flex flex-col w-64 shrink-0 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 h-fit space-y-1.5 sticky top-22">
+            <button onclick="switchTab('earn')" id="side_earn" class="w-full flex items-center justify-between px-4 py-3 rounded-xl font-bold text-sm bg-emerald-500 text-white shadow-md shadow-emerald-500/20 transition">
+                <span class="flex items-center gap-3"><i class="fa-solid fa-sack-dollar w-5"></i> Pul ishlash</span>
+            </button>
+            <button onclick="switchTab('create')" id="side_create" class="w-full flex items-center justify-between px-4 py-3 rounded-xl font-bold text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                <span class="flex items-center gap-3"><i class="fa-solid fa-circle-plus w-5"></i> Vazifa yaratish</span>
+            </button>
+            <button onclick="switchTab('mytasks')" id="side_mytasks" class="w-full flex items-center justify-between px-4 py-3 rounded-xl font-bold text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                <span class="flex items-center gap-3"><i class="fa-solid fa-list-check w-5"></i> Vazifalarim</span>
+                <span id="myTasksBadge" class="px-2 py-0.5 text-xs rounded-full bg-emerald-500/20 text-emerald-500 font-extrabold">0</span>
+            </button>
+            <button onclick="switchTab('referral')" id="side_referral" class="w-full flex items-center justify-between px-4 py-3 rounded-xl font-bold text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                <span class="flex items-center gap-3"><i class="fa-solid fa-user-group w-5"></i> Referal (Bonus)</span>
+                <span class="px-2 py-0.5 text-[10px] rounded-full bg-amber-500/20 text-amber-500 font-extrabold">+5000</span>
+            </button>
+            <button onclick="switchTab('wallet')" id="side_wallet" class="w-full flex items-center justify-between px-4 py-3 rounded-xl font-bold text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                <span class="flex items-center gap-3"><i class="fa-solid fa-wallet w-5"></i> Hamyon (Depozit)</span>
+            </button>
+        </aside>
+
+        <!-- Main Content Column -->
+        <main class="flex-1 min-w-0 space-y-4 sm:space-y-6">
+
+            <!-- ================= 1. PUL ISHLASH (EARN TASKS) ================= -->
+            <section id="tab_earn" class="space-y-4">
+                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 space-y-3">
+                    <div class="flex items-center justify-between gap-2">
+                        <div>
+                            <h1 class="text-base sm:text-xl font-extrabold">Vazifa bajarib pul ishlang</h1>
+                            <p class="text-xs text-slate-400">1. Sahifani ochib bajaring — 2. Tasdiqlab pulni oling</p>
+                        </div>
+                    </div>
+
+                    <!-- Horizontal scrollable pills on mobile -->
+                    <div class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
+                        <button onclick="filterEarnPlatform('all')" id="flt_all" class="shrink-0 px-3.5 py-2 rounded-xl text-xs font-bold bg-emerald-500 text-white">Barchasi</button>
+                        <button onclick="filterEarnPlatform('Telegram')" id="flt_Telegram" class="shrink-0 px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800"><i class="fa-brands fa-telegram text-sky-500 mr-1"></i>Telegram</button>
+                        <button onclick="filterEarnPlatform('Instagram')" id="flt_Instagram" class="shrink-0 px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800"><i class="fa-brands fa-instagram text-pink-500 mr-1"></i>Instagram</button>
+                        <button onclick="filterEarnPlatform('YouTube')" id="flt_YouTube" class="shrink-0 px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800"><i class="fa-brands fa-youtube text-rose-500 mr-1"></i>YouTube</button>
+                    </div>
+                </div>
+
+                <div id="earnTasksGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3.5 sm:gap-4"></div>
+            </section>
+
+            <!-- ================= 2. VAZIFA YARATISH (CREATE TASK) ================= -->
+            <section id="tab_create" class="hidden">
+                <div class="max-w-2xl mx-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-6 shadow-sm space-y-5">
+                    <div>
+                        <h2 class="text-lg sm:text-xl font-extrabold">Yangi vazifa (Buyurtma) yaratish</h2>
+                        <p class="text-xs text-slate-400 mt-0.5">Kanalingiz yoki sahifangiz uchun obunachi, layk va izoh yig'ing</p>
+                    </div>
+
+                    <form onsubmit="requestCreateTaskConfirm(event)" class="space-y-4">
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-[11px] font-bold uppercase text-slate-400 mb-1.5">Tarmoq</label>
+                                <select id="newTaskPlatform" onchange="updateMinPriceRule()" class="w-full px-3.5 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-bold text-sm">
+                                    <option value="Telegram">Telegram</option>
+                                    <option value="Instagram">Instagram</option>
+                                    <option value="YouTube">YouTube</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold uppercase text-slate-400 mb-1.5">Vazifa turi</label>
+                                <select id="newTaskType" onchange="updateMinPriceRule()" class="w-full px-3.5 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-bold text-sm">
+                                    <option value="Obuna">Obuna (Follow)</option>
+                                    <option value="Layk">Layk (Like)</option>
+                                    <option value="Izoh">Izoh (Comment)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-[11px] font-bold uppercase text-slate-400 mb-1.5">Vazifa sarlavhasi (Nomi)</label>
+                            <input type="text" id="newTaskTitle" required placeholder="Masalan: Telegram kanalimizga obuna bo'ling"
+                                class="w-full px-3.5 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-semibold text-sm">
+                        </div>
+
+                        <div>
+                            <label class="block text-[11px] font-bold uppercase text-slate-400 mb-1.5">Kanal yoki Post ssilkasi (Link)</label>
+                            <input type="url" id="newTaskLink" required placeholder="https://t.me/kanal_nomi"
+                                class="w-full px-3.5 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-semibold text-sm">
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <div class="flex items-center justify-between mb-1.5">
+                                    <label class="text-[11px] font-bold uppercase text-slate-400">1 ta narxi</label>
+                                    <span id="minPriceBadge" class="text-[11px] font-extrabold text-emerald-500">Min: 100 so'm</span>
+                                </div>
+                                <input type="number" id="newTaskReward" required min="100" value="100" oninput="calculateTotalOrderCost()"
+                                    class="w-full px-3.5 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-extrabold text-emerald-500 text-base">
+                            </div>
+
+                            <div>
+                                <label class="block text-[11px] font-bold uppercase text-slate-400 mb-1.5">Kerakli soni</label>
+                                <input type="number" id="newTaskCount" required min="5" value="50" oninput="calculateTotalOrderCost()"
+                                    class="w-full px-3.5 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-extrabold text-base">
+                            </div>
+                        </div>
+
+                        <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                            <div>
+                                <span class="text-xs font-bold uppercase text-slate-400 block">Jami to'lov:</span>
+                                <span class="text-[11px] text-slate-400">Balansingizdan yechiladi</span>
+                            </div>
+                            <span id="orderTotalCost" class="text-xl sm:text-2xl font-extrabold text-emerald-500">5 000 so'm</span>
+                        </div>
+
+                        <button type="submit" class="w-full py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 active:scale-[0.99] text-white font-bold shadow-lg shadow-emerald-500/25 transition text-sm sm:text-base">
+                            <i class="fa-solid fa-paper-plane mr-1.5"></i> Vazifani joylash
+                        </button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- ================= 3. MENING VAZIFALARIM (MY TASKS + REFUND) ================= -->
+            <section id="tab_mytasks" class="hidden space-y-4">
+                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 flex items-center justify-between gap-2">
+                    <div>
+                        <h2 class="text-base sm:text-xl font-extrabold">Mening vazifalarim</h2>
+                        <p class="text-xs text-slate-400">Istalgan vaqtda vazifani yakunlab, qolgan pulni qaytarib olishingiz mumkin</p>
+                    </div>
+                    <button onclick="switchTab('create')" class="shrink-0 px-3.5 py-2 rounded-xl bg-emerald-500 text-white text-xs font-bold">
+                        + Qo'shish
+                    </button>
+                </div>
+
+                <div id="myTasksContainer" class="space-y-3"></div>
+            </section>
+
+            <!-- ================= 4. REFERAL SECTION (5000 SO'M + 10% EARNINGS) ================= -->
+            <section id="tab_referral" class="hidden space-y-4">
+                <!-- Promo Banner -->
+                <div class="bg-gradient-to-br from-emerald-600 to-teal-700 rounded-2xl p-5 sm:p-6 text-white shadow-lg space-y-4">
+                    <div class="flex items-start justify-between gap-4">
+                        <div class="space-y-1.5">
+                            <span class="inline-block px-2.5 py-0.5 rounded-full bg-white/20 text-[11px] font-extrabold uppercase tracking-wider">Hamkorlik Dasturi</span>
+                            <h2 class="text-xl sm:text-2xl font-extrabold">Do'stlarni taklif qiling va boyib boring!</h2>
+                            <p class="text-xs sm:text-sm text-emerald-100 leading-relaxed">
+                                1. Taklif qilgan do'stingiz <strong>1 ta vazifa</strong> bajarsa, darhol hisobingizga <strong>+5 000 so'm</strong> tushadi!<br>
+                                2. Do'stingiz ishlagan har bir puldan umrbod <strong>+10% bonus</strong> olasiz!
+                            </p>
+                        </div>
+                        <div class="hidden sm:flex w-16 h-16 shrink-0 rounded-2xl bg-white/15 items-center justify-center text-3xl">
+                            <i class="fa-solid fa-gift"></i>
+                        </div>
+                    </div>
+
+                    <!-- Referral Link Box -->
+                    <div class="bg-black/25 backdrop-blur-sm p-3 sm:p-4 rounded-xl space-y-2 border border-white/15">
+                        <label class="block text-[11px] font-bold uppercase text-emerald-200">Sizning shaxsiy taklif ssilkangiz:</label>
+                        <div class="flex flex-col sm:flex-row gap-2">
+                            <input type="text" id="myReferralLinkInput" readonly
+                                class="flex-1 px-3.5 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white font-mono text-xs sm:text-sm focus:outline-none">
+                            <div class="grid grid-cols-2 sm:flex gap-2">
+                                <button onclick="copyReferralLink()" class="px-4 py-2.5 rounded-xl bg-white text-emerald-700 font-extrabold text-xs hover:bg-emerald-50 transition flex items-center justify-center gap-1.5">
+                                    <i class="fa-regular fa-copy"></i> Nusxalash
+                                </button>
+                                <button onclick="shareReferralTelegram()" class="px-4 py-2.5 rounded-xl bg-sky-500 text-white font-extrabold text-xs hover:bg-sky-600 transition flex items-center justify-center gap-1.5">
+                                    <i class="fa-brands fa-telegram"></i> Ulashish
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Referral KPI Stats -->
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl">
+                        <span class="text-[11px] font-bold uppercase text-slate-400">Taklif qilinganlar</span>
+                        <div id="refStatTotal" class="text-xl sm:text-2xl font-extrabold mt-1">0 ta</div>
+                        <p class="text-[11px] text-slate-400 mt-0.5">Jami ro'yxatdan o'tgan</p>
+                    </div>
+                    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl">
+                        <span class="text-[11px] font-bold uppercase text-slate-400">Faol referallar</span>
+                        <div id="refStatActive" class="text-xl sm:text-2xl font-extrabold mt-1 text-emerald-500">0 ta</div>
+                        <p class="text-[11px] text-slate-400 mt-0.5">Kamida 1 ta vazifa bajargan</p>
+                    </div>
+                    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl">
+                        <span class="text-[11px] font-bold uppercase text-slate-400">5 000 so'm Bonuslar</span>
+                        <div id="refStatBonus5000" class="text-xl sm:text-2xl font-extrabold mt-1 text-amber-500">0 so'm</div>
+                        <p class="text-[11px] text-slate-400 mt-0.5">Faol do'stlar uchun</p>
+                    </div>
+                    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl">
+                        <span class="text-[11px] font-bold uppercase text-slate-400">10% Daromaddan</span>
+                        <div id="refStatPercent10" class="text-xl sm:text-2xl font-extrabold mt-1 text-sky-500">0 so'm</div>
+                        <p class="text-[11px] text-slate-400 mt-0.5">Vazifalardan 10% ulush</p>
+                    </div>
+                </div>
+
+                <!-- Invited Friends List -->
+                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 space-y-3">
+                    <h3 class="font-extrabold text-sm sm:text-base">Siz taklif qilgan foydalanuvchilar ro'yxati</h3>
+                    <div id="myReferralsList" class="space-y-2.5"></div>
+                </div>
+            </section>
+
+            <!-- ================= 5. HAMYON (3 DEPOSIT WAYS: UZCARD/HUMO MAINTENANCE + TELEGRAM ADMIN) ================= -->
+            <section id="tab_wallet" class="hidden space-y-6">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                    
+                    <!-- DEPOSIT COLUMN (3 METHODS) -->
+                    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-6 space-y-4">
+                        <div>
+                            <h3 class="text-base sm:text-lg font-extrabold flex items-center gap-2">
+                                <i class="fa-solid fa-circle-arrow-down text-emerald-500"></i> Hisobni to'ldirish (Depozit)
+                            </h3>
+                            <p class="text-xs text-slate-400 mt-0.5">O'zingizga qulay to'lov usulini tanlang:</p>
+                        </div>
+
+                        <!-- 3 Deposit Methods Cards -->
+                        <div class="space-y-3">
+                            
+                            <!-- WAY 1: AUTO UZCARD (UNDER MAINTENANCE) -->
+                            <div onclick="showMaintenanceAlert('Avto Uzcard')" class="cursor-not-allowed opacity-75 p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex items-center justify-between gap-3">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center font-extrabold text-sm">
+                                        UZ
+                                    </div>
+                                    <div>
+                                        <div class="font-bold text-sm">1. Avto Uzcard to'lov</div>
+                                        <span class="inline-flex items-center gap-1 text-[11px] font-bold text-amber-500">
+                                            <i class="fa-solid fa-screwdriver-wrench"></i> Texnik ishlar olib borilmoqda
+                                        </span>
+                                    </div>
+                                </div>
+                                <span class="px-2.5 py-1 rounded-lg bg-rose-500/10 text-rose-500 font-bold text-[11px] shrink-0">
+                                    Ishlamaydi
+                                </span>
+                            </div>
+
+                            <!-- WAY 2: AUTO HUMO (UNDER MAINTENANCE) -->
+                            <div onclick="showMaintenanceAlert('Avto Humo')" class="cursor-not-allowed opacity-75 p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex items-center justify-between gap-3">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center font-extrabold text-sm">
+                                        HM
+                                    </div>
+                                    <div>
+                                        <div class="font-bold text-sm">2. Avto Humo to'lov</div>
+                                        <span class="inline-flex items-center gap-1 text-[11px] font-bold text-amber-500">
+                                            <i class="fa-solid fa-screwdriver-wrench"></i> Texnik ishlar olib borilmoqda
+                                        </span>
+                                    </div>
+                                </div>
+                                <span class="px-2.5 py-1 rounded-lg bg-rose-500/10 text-rose-500 font-bold text-[11px] shrink-0">
+                                    Ishlamaydi
+                                </span>
+                            </div>
+
+                            <!-- WAY 3: VIA ADMIN ON TELEGRAM (ACTIVE) -->
+                            <div class="p-4 rounded-xl bg-emerald-500/5 border-2 border-emerald-500 space-y-3">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-xl bg-sky-500 text-white flex items-center justify-center text-lg shadow-md shadow-sky-500/25">
+                                            <i class="fa-brands fa-telegram"></i>
+                                        </div>
+                                        <div>
+                                            <div class="font-extrabold text-sm">3. Admin orqali (Telegram)</div>
+                                            <span class="text-[11px] text-emerald-500 font-bold">24/7 tezkor hisob to'ldirish</span>
+                                        </div>
+                                    </div>
+                                    <span class="px-2.5 py-1 rounded-lg bg-emerald-500 text-white font-extrabold text-[11px]">
+                                        Faol (Ishlayapti)
+                                    </span>
+                                </div>
+
+                                <p class="text-xs text-slate-500 dark:text-slate-400">
+                                    To'ldirmoqchi bo'lgan summangizni tanlang va Telegram orqali adminga yozing. Admin hisobingizni darhol to'ldirib beradi:
+                                </p>
+
+                                <div class="grid grid-cols-3 gap-2">
+                                    <button type="button" onclick="setDepositAmount(10000)" class="py-2 rounded-xl bg-white dark:bg-slate-800 font-bold text-xs border border-slate-200 dark:border-slate-700 hover:border-emerald-500">10 000 so'm</button>
+                                    <button type="button" onclick="setDepositAmount(25000)" class="py-2 rounded-xl bg-white dark:bg-slate-800 font-bold text-xs border border-slate-200 dark:border-slate-700 hover:border-emerald-500">25 000 so'm</button>
+                                    <button type="button" onclick="setDepositAmount(50000)" class="py-2 rounded-xl bg-white dark:bg-slate-800 font-bold text-xs border border-slate-200 dark:border-slate-700 hover:border-emerald-500">50 000 so'm</button>
+                                </div>
+
+                                <input type="number" id="depositInput" value="10000" min="1000" placeholder="Summani kiriting (so'm)"
+                                    class="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-extrabold text-sm">
+
+                                <button type="button" onclick="openTelegramDeposit()" class="w-full py-3 rounded-xl bg-sky-500 hover:bg-sky-600 active:scale-[0.99] text-white font-bold text-sm shadow-lg shadow-sky-500/25 transition flex items-center justify-center gap-2">
+                                    <i class="fa-brands fa-telegram text-base"></i> Telegram orqali Adminga yozish
+                                </button>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- WITHDRAW COLUMN -->
+                    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-6 space-y-4 h-fit">
+                        <div>
+                            <h3 class="text-base sm:text-lg font-extrabold flex items-center gap-2">
+                                <i class="fa-solid fa-money-bill-transfer text-sky-500"></i> Pul yechish (Kartaga)
+                            </h3>
+                            <p class="text-xs text-slate-400 mt-0.5">Ishlagan pulingizni Uzcard yoki Humo kartangizga chiqarib oling:</p>
+                        </div>
+
+                        <div>
+                            <label class="block text-[11px] font-bold uppercase text-slate-400 mb-1.5">Karta raqamingiz (Uzcard / Humo)</label>
+                            <input type="text" id="withdrawCard" maxlength="19" placeholder="8600 •••• •••• ••••"
+                                class="w-full px-3.5 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-semibold text-sm">
+                        </div>
+
+                        <div>
+                            <label class="block text-[11px] font-bold uppercase text-slate-400 mb-1.5">Yechish summasi (Min: 10 000 so'm)</label>
+                            <input type="number" id="withdrawAmount" placeholder="10000"
+                                class="w-full px-3.5 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-bold text-sm">
+                        </div>
+
+                        <button onclick="handleWithdraw()" class="w-full py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-sm shadow-lg shadow-emerald-500/20 transition">
+                            Pul yechish so'rovini yuborish
+                        </button>
+                    </div>
+
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- ================= MOBILE 5-TAB BOTTOM NAVIGATION ================= -->
+    <nav class="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 grid grid-cols-5 py-2 px-1">
+        <button onclick="switchTab('earn')" id="mob_earn" class="flex flex-col items-center justify-center gap-1 text-emerald-500 font-bold text-[10px]">
+            <i class="fa-solid fa-sack-dollar text-base"></i><span>Ishlash</span>
+        </button>
+        <button onclick="switchTab('create')" id="mob_create" class="flex flex-col items-center justify-center gap-1 text-slate-400 font-bold text-[10px]">
+            <i class="fa-solid fa-circle-plus text-base"></i><span>Yaratish</span>
+        </button>
+        <button onclick="switchTab('mytasks')" id="mob_mytasks" class="flex flex-col items-center justify-center gap-1 text-slate-400 font-bold text-[10px]">
+            <i class="fa-solid fa-list-check text-base"></i><span>Buyurtma</span>
+        </button>
+        <button onclick="switchTab('referral')" id="mob_referral" class="flex flex-col items-center justify-center gap-1 text-slate-400 font-bold text-[10px]">
+            <i class="fa-solid fa-user-group text-base"></i><span>Referal</span>
+        </button>
+        <button onclick="switchTab('wallet')" id="mob_wallet" class="flex flex-col items-center justify-center gap-1 text-slate-400 font-bold text-[10px]">
+            <i class="fa-solid fa-wallet text-base"></i><span>Hamyon</span>
+        </button>
+    </nav>
+
+    <!-- ================= "ARE YOU SURE?" TASK CONFIRMATION MODAL ================= -->
+    <div id="confirmTaskModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl space-y-4">
+            <div class="w-12 h-12 rounded-full bg-amber-500/15 text-amber-500 flex items-center justify-center text-2xl mx-auto">
+                <i class="fa-solid fa-circle-question"></i>
+            </div>
+            <div class="text-center">
+                <h3 class="text-lg font-extrabold">Ishonchingiz komilmi?</h3>
+                <p class="text-xs text-slate-400 mt-1">Ushbu vazifani yaratishni tasdiqlaysizmi?</p>
+            </div>
+
+            <div id="confirmTaskSummary" class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800 text-xs space-y-1.5 border border-slate-200 dark:border-slate-700"></div>
+
+            <div class="grid grid-cols-2 gap-2.5 pt-1">
+                <button type="button" onclick="closeConfirmModal()" class="py-3 rounded-xl bg-slate-200 dark:bg-slate-800 font-bold text-xs sm:text-sm">
+                    Yo'q, bekor qilish
+                </button>
+                <button type="button" onclick="confirmAndCreateTask()" class="py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs sm:text-sm shadow-lg shadow-emerald-500/25">
+                    Ha, tasdiqlayman
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toastBox" class="fixed bottom-20 lg:bottom-6 right-4 left-4 sm:left-auto z-50 hidden px-4 py-3 rounded-xl bg-slate-900 text-white border border-emerald-500/40 shadow-xl text-xs sm:text-sm font-bold flex items-center gap-2">
+        <i class="fa-solid fa-circle-check text-emerald-400 shrink-0"></i>
+        <span id="toastText">Bajarildi!</span>
+    </div>
+
+    <script>
+        // =========================================================================
+        // 1. BACKEND & TELEGRAM ADMIN CONFIGURATION (CHANGE LINK HERE LATER)
+        // =========================================================================
+        const API_CONFIG = {
+            USE_BACKEND_API: false, // Set to true when connecting your backend server
+            BASE_URL: "https://your-backend-domain.com/api",
+            TELEGRAM_ADMIN_DEPOSIT_URL: "https://t.me/YOUR_ADMIN_USERNAME", // <-- PUT YOUR TELEGRAM ADMIN LINK HERE
+            REFERRAL_FIRST_TASK_BONUS: 5000, // 5000 so'm when referral completes 1st task
+            REFERRAL_COMMISSION_RATE: 0.10   // 10% from referral's task earnings
+        };
+
+        const DEFAULT_MIN_PRICES = {
+            Telegram:  { Obuna: 100, Layk: 50, Izoh: 50 },
+            Instagram: { Obuna: 100, Layk: 50, Izoh: 50 },
+            YouTube:   { Obuna: 100, Layk: 50, Izoh: 50 }
+        };
+
+        function getMinPrices() {
+            return JSON.parse(localStorage.getItem('pultop_db_min_prices')) || DEFAULT_MIN_PRICES;
+        }
+
+        function getUsersDB() {
+            return JSON.parse(localStorage.getItem('pultop_db_users')) || [];
+        }
+
+        function saveUsersDB(users) {
+            localStorage.setItem('pultop_db_users', JSON.stringify(users));
+        }
+
+        function getTasksDB() {
+            const raw = localStorage.getItem('pultop_db_tasks');
+            if (!raw) {
+                const sampleTasks = [
+                    {
+                        id: "T-1001",
+                        platform: "Telegram",
+                        type: "Obuna",
+                        title: "Toshkent Bozor rasmiy kanaliga obuna bo'ling",
+                        link: "https://t.me/telegram",
+                        reward: 100,
+                        doneCount: 14,
+                        totalCount: 100,
+                        ownerId: "SYSTEM",
+                        ownerPhone: "+998 94 990 34 24",
+                        status: "active",
+                        completedBy: [],
+                        createdAt: "2026-11-13"
+                    },
+                    {
+                        id: "T-1002",
+                        platform: "Instagram",
+                        type: "Layk",
+                        title: "Yangi Reels videoga layk bosing",
+                        link: "https://instagram.com",
+                        reward: 50,
+                        doneCount: 25,
+                        totalCount: 80,
+                        ownerId: "SYSTEM",
+                        ownerPhone: "+998 94 990 34 24",
+                        status: "active",
+                        completedBy: [],
+                        createdAt: "2026-11-13"
+                    }
+                ];
+                localStorage.setItem('pultop_db_tasks', JSON.stringify(sampleTasks));
+                return sampleTasks;
+            }
+            return JSON.parse(raw);
+        }
+
+        function saveTasksDB(tasks) {
+            localStorage.setItem('pultop_db_tasks', JSON.stringify(tasks));
+        }
+
+        // =========================================================================
+        // 2. STRICT AUTHENTICATION CHECK ON LOAD
+        // =========================================================================
+        let currentUser = null;
+        let currentPlatformFilter = 'all';
+        let openedTasksMap = {};
+        let pendingNewTaskDraft = null;
+
+        window.addEventListener('DOMContentLoaded', () => {
+            if (localStorage.getItem('pultop_theme') === 'light') {
+                document.documentElement.classList.remove('dark');
+                document.getElementById('themeIcon').className = 'fa-solid fa-moon text-slate-700';
+            }
+
+            const sessionData = JSON.parse(
+                localStorage.getItem('pultop_remembered_user') ||
+                sessionStorage.getItem('pultop_active_user') ||
+                'null'
+            );
+
+            if (!sessionData) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            const users = getUsersDB();
+            const dbUser = users.find(u => u.id === sessionData.id);
+            if (!dbUser || dbUser.active === false) {
+                localStorage.removeItem('pultop_remembered_user');
+                sessionStorage.removeItem('pultop_active_user');
+                window.location.href = 'index.html';
+                return;
+            }
+
+            currentUser = dbUser;
+            refreshHeaderUI();
+            updateMinPriceRule();
+            renderEarnTasks();
+            renderMyTasks();
+            renderReferralSection();
+        });
+
+        function syncCurrentUser() {
+            const users = getUsersDB();
+            const idx = users.findIndex(u => u.id === currentUser.id);
+            if (idx > -1) {
+                users[idx] = currentUser;
+                saveUsersDB(users);
+            }
+            refreshHeaderUI();
+        }
+
+        function refreshHeaderUI() {
+            //Reload fresh user balance in case referral updated it
+            const fresh = getUsersDB().find(u => u.id === currentUser.id);
+            if (fresh) currentUser = fresh;
+
+            document.getElementById('topUserPhone').textContent = currentUser.phone;
+            document.getElementById('topBalance').textContent = Number(currentUser.balance).toLocaleString('uz-UZ') + " so'm";
+            const myTasksCount = getTasksDB().filter(t => t.ownerId === currentUser.id).length;
+            document.getElementById('myTasksBadge').textContent = myTasksCount;
+        }
+
+        function logoutUser() {
+            localStorage.removeItem('pultop_remembered_user');
+            sessionStorage.removeItem('pultop_active_user');
+            window.location.href = 'index.html';
+        }
+
+        // =========================================================================
+        // 3. EARN TASKS + AUTOMATIC REFERRAL REWARDS (5000 SO'M + 10% COMMISSION)
+        // =========================================================================
+        function filterEarnPlatform(plat) {
+            currentPlatformFilter = plat;
+            ['all', 'Telegram', 'Instagram', 'YouTube'].forEach(p => {
+                const btn = document.getElementById('flt_' + p);
+                btn.className = p === plat
+                    ? "shrink-0 px-3.5 py-2 rounded-xl text-xs font-bold bg-emerald-500 text-white"
+                    : "shrink-0 px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800";
+            });
+            renderEarnTasks();
+        }
+
+        function renderEarnTasks() {
+            const tasks = getTasksDB();
+            const available = tasks.filter(t => {
+                const isActive = t.status !== 'finished' && t.doneCount < t.totalCount;
+                const notDoneByMe = !(t.completedBy || []).includes(currentUser.id);
+                const matchesPlat = currentPlatformFilter === 'all' || t.platform === currentPlatformFilter;
+                return isActive && notDoneByMe && matchesPlat;
+            });
+
+            const grid = document.getElementById('earnTasksGrid');
+            if (available.length === 0) {
+                grid.innerHTML = `<div class="col-span-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-8 text-center text-slate-400 text-xs sm:text-sm">Hozircha bu bo'limda yangi vazifalar yo'q.</div>`;
+                return;
+            }
+
+            grid.innerHTML = available.map(t => {
+                const icon = t.platform === 'Telegram' ? 'fa-brands fa-telegram text-sky-500' :
+                             t.platform === 'Instagram' ? 'fa-brands fa-instagram text-pink-500' :
+                             'fa-brands fa-youtube text-rose-500';
+                const isOpened = openedTasksMap[t.id] === true;
+
+                return `
+                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 flex flex-col justify-between gap-4 shadow-sm">
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="inline-flex items-center gap-1.5 text-xs font-extrabold px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800">
+                                <i class="${icon} text-sm"></i> ${t.platform} • ${t.type}
+                            </span>
+                            <span class="px-2.5 py-1 rounded-lg bg-emerald-500/15 text-emerald-500 font-extrabold text-xs sm:text-sm">
+                                +${Number(t.reward).toLocaleString('uz-UZ')} so'm
+                            </span>
+                        </div>
+                        <h3 class="font-bold text-sm sm:text-base leading-snug break-words">${t.title}</h3>
+                        <p class="text-[11px] text-slate-400">Bajarildi: ${t.doneCount} / ${t.totalCount}</p>
+                    </div>
+
+                    <div>
+                        ${!isOpened ? `
+                            <button onclick="openTaskExternal('${t.id}', '${t.link}')" class="w-full py-2.5 rounded-xl bg-slate-900 dark:bg-slate-800 hover:bg-emerald-500 text-white font-bold text-xs transition flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-up-right-from-square"></i> 1. Sahifani ochish
+                            </button>
+                        ` : `
+                            <button onclick="claimTaskReward('${t.id}')" class="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/25">
+                                <i class="fa-solid fa-check-double"></i> 2. Tasdiqlash (+${t.reward} so'm)
+                            </button>
+                        `}
+                    </div>
+                </div>
+                `;
+            }).join('');
+        }
+
+        function openTaskExternal(taskId, link) {
+            window.open(link, '_blank');
+            openedTasksMap[taskId] = true;
+            renderEarnTasks();
+        }
+
+        function claimTaskReward(taskId) {
+            const tasks = getTasksDB();
+            const task = tasks.find(t => t.id === taskId);
+            if (!task || task.doneCount >= task.totalCount) return;
+
+            task.doneCount += 1;
+            if (!task.completedBy) task.completedBy = [];
+            task.completedBy.push(currentUser.id);
+            if (task.doneCount >= task.totalCount) task.status = 'finished';
+            saveTasksDB(tasks);
+
+            const allUsers = getUsersDB();
+            const meIdx = allUsers.findIndex(u => u.id === currentUser.id);
+            if (meIdx === -1) return;
+
+            const rewardAmount = Number(task.reward);
+            const now = new Date().toISOString().slice(0, 16).replace('T', ' ');
+
+            // 1. Add reward to current user
+            allUsers[meIdx].balance = Number(allUsers[meIdx].balance) + rewardAmount;
+            if (!allUsers[meIdx].completedTasks) allUsers[meIdx].completedTasks = [];
+            allUsers[meIdx].completedTasks.push({
+                taskId: task.id,
+                title: `[${task.platform} ${task.type}] ${task.title}`,
+                reward: rewardAmount,
+                time: now
+            });
+
+            // 2. REFERRAL PAYOUT LOGIC (10% always + 5000 so'm after 1st completed task)
+            const inviterId = allUsers[meIdx].referredBy;
+            if (inviterId) {
+                const inviterIdx = allUsers.findIndex(u => u.id === inviterId);
+                if (inviterIdx > -1) {
+                    const tenPercentCommission = Math.round(rewardAmount * API_CONFIG.REFERRAL_COMMISSION_RATE);
+                    allUsers[inviterIdx].balance = Number(allUsers[inviterIdx].balance) + tenPercentCommission;
+                    allUsers[inviterIdx].referral10PercentEarned = Number(allUsers[inviterIdx].referral10PercentEarned || 0) + tenPercentCommission;
+                    allUsers[meIdx].contributedToReferrer = Number(allUsers[meIdx].contributedToReferrer || 0) + tenPercentCommission;
+
+                    // Check if this is the referral's 1st completed task -> Give 5000 so'm bonus!
+                    if (!allUsers[meIdx].firstTaskBonusPaid && allUsers[meIdx].completedTasks.length >= 1) {
+                        allUsers[meIdx].firstTaskBonusPaid = true;
+                        allUsers[inviterIdx].balance += API_CONFIG.REFERRAL_FIRST_TASK_BONUS;
+                        allUsers[inviterIdx].referral5000BonusEarned = Number(allUsers[inviterIdx].referral5000BonusEarned || 0) + API_CONFIG.REFERRAL_FIRST_TASK_BONUS;
+                    }
+                }
+            }
+
+            saveUsersDB(allUsers);
+            currentUser = allUsers[meIdx];
+            refreshHeaderUI();
+
+            showToast(`+${rewardAmount} so'm balansingizga qo'shildi!`);
+            renderEarnTasks();
+            renderMyTasks();
+            renderReferralSection();
+        }
+
+        // =========================================================================
+        // 4. REFERRAL UI RENDERING & LINK SHARING
+        // =========================================================================
+       function getReferralUrl() {
+    const basePath = window.location.origin + window.location.pathname.replace('app.html', '');
+    const cleanBase = basePath.endsWith('/') ? basePath : basePath + '/';
+    return `${cleanBase}index.html?ref=${currentUser.id}`;
+}
+
+        function renderReferralSection() {
+            const refInput = document.getElementById('myReferralLinkInput');
+            if (refInput) refInput.value = getReferralUrl();
+
+            const allUsers = getUsersDB();
+            const freshMe = allUsers.find(u => u.id === currentUser.id) || currentUser;
+            const myReferrals = allUsers.filter(u => u.referredBy === currentUser.id);
+            const activeReferrals = myReferrals.filter(u => (u.completedTasks || []).length >= 1);
+
+            document.getElementById('refStatTotal').textContent = `${myReferrals.length} ta`;
+            document.getElementById('refStatActive').textContent = `${activeReferrals.length} ta`;
+            document.getElementById('refStatBonus5000').textContent = Number(freshMe.referral5000BonusEarned || 0).toLocaleString('uz-UZ') + " so'm";
+            document.getElementById('refStatPercent10').textContent = Number(freshMe.referral10PercentEarned || 0).toLocaleString('uz-UZ') + " so'm";
+
+            const listContainer = document.getElementById('myReferralsList');
+            if (myReferrals.length === 0) {
+                listContainer.innerHTML = `<div class="p-6 text-center text-xs text-slate-400 border border-dashed border-slate-200 dark:border-slate-800 rounded-xl">Siz hali do'stlarni taklif qilmadingiz. Yuqoridagi ssilkani do'stlaringizga yuboring!</div>`;
+                return;
+            }
+
+            listContainer.innerHTML = myReferrals.map(r => {
+                const tasksDone = (r.completedTasks || []).length;
+                const isBonusPaid = r.firstTaskBonusPaid === true;
+                const tenPercentFromUser = Number(r.contributedToReferrer || 0);
+
+                return `
+                <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                        <div class="font-bold text-sm flex items-center gap-2">
+                            <span>${r.phone}</span>
+                            ${isBonusPaid
+                                ? `<span class="px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-500 text-[10px] font-extrabold">+5 000 so'm olindi</span>`
+                                : `<span class="px-2 py-0.5 rounded-md bg-amber-500/15 text-amber-500 text-[10px] font-extrabold">Kutilmoqda (0/1 vazifa)</span>`
+                            }
+                        </div>
+                        <div class="text-[11px] text-slate-400 mt-0.5">Qo'shilgan: ${r.joinedAt} • Bajargan vazifasi: <b>${tasksDone} ta</b></div>
+                    </div>
+                    <div class="text-left sm:text-right">
+                        <span class="text-[10px] uppercase font-bold text-slate-400 block">10% ulushingiz:</span>
+                        <span class="font-extrabold text-sm text-sky-500">+${tenPercentFromUser.toLocaleString('uz-UZ')} so'm</span>
+                    </div>
+                </div>
+                `;
+            }).join('');
+        }
+
+        function copyReferralLink() {
+            const url = getReferralUrl();
+            navigator.clipboard.writeText(url).then(() => {
+                showToast("Referal ssilka nusxalandi!");
+            });
+        }
+
+        function shareReferralTelegram() {
+            const url = encodeURIComponent(getReferralUrl());
+            const text = encodeURIComponent("PulTop platformasida oddiy obuna va layk bosib pul ishlang! Ro'yxatdan o'tish:");
+            window.open(`https://t.me/share/url?url=${url}&text=${text}`, '_blank');
+        }
+
+        // =========================================================================
+        // 5. CREATE TASK WITH DYNAMIC MIN PRICE & "ARE YOU SURE?" CONFIRMATION
+        // =========================================================================
+        function updateMinPriceRule() {
+            const plat = document.getElementById('newTaskPlatform').value;
+            const type = document.getElementById('newTaskType').value;
+            const minPrices = getMinPrices();
+
+            const minVal = (minPrices[plat] && minPrices[plat][type]) ? Number(minPrices[plat][type]) : (type === 'Obuna' ? 100 : 50);
+            const rewardInput = document.getElementById('newTaskReward');
+            rewardInput.min = minVal;
+            if (Number(rewardInput.value) < minVal) rewardInput.value = minVal;
+            document.getElementById('minPriceBadge').textContent = `Min: ${minVal} so'm`;
+            calculateTotalOrderCost();
+        }
+
+        function calculateTotalOrderCost() {
+            const reward = Number(document.getElementById('newTaskReward').value || 0);
+            const count = Number(document.getElementById('newTaskCount').value || 0);
+            document.getElementById('orderTotalCost').textContent = (reward * count).toLocaleString('uz-UZ') + " so'm";
+        }
+
+        function requestCreateTaskConfirm(e) {
+            e.preventDefault();
+            const plat = document.getElementById('newTaskPlatform').value;
+            const type = document.getElementById('newTaskType').value;
+            const title = document.getElementById('newTaskTitle').value.trim();
+            const link = document.getElementById('newTaskLink').value.trim();
+            const reward = Number(document.getElementById('newTaskReward').value);
+            const count = Number(document.getElementById('newTaskCount').value);
+
+            const minAllowed = Number(getMinPrices()[plat][type]);
+            if (reward < minAllowed) {
+                return showToast(`${plat} ${type} uchun minimal narx ${minAllowed} so'm!`);
+            }
+
+            const totalCost = reward * count;
+            if (currentUser.balance < totalCost) {
+                return showToast(`Balansingizda mablag' yetarli emas! Kerak: ${totalCost.toLocaleString('uz-UZ')} so'm`);
+            }
+
+            pendingNewTaskDraft = { plat, type, title, link, reward, count, totalCost };
+            document.getElementById('confirmTaskSummary').innerHTML = `
+                <div class="flex justify-between"><span>Tarmoq va tur:</span><strong class="text-emerald-500">${plat} • ${type}</strong></div>
+                <div class="flex justify-between"><span>Vazifa nomi:</span><strong class="truncate max-w-[180px]">${title}</strong></div>
+                <div class="flex justify-between"><span>Miqdori va narxi:</span><strong>${count} ta × ${reward} so'm</strong></div>
+                <div class="flex justify-between border-t border-slate-200 dark:border-slate-700 pt-1.5 text-sm">
+                    <span>Yechiladigan summa:</span><strong class="text-emerald-500">${totalCost.toLocaleString('uz-UZ')} so'm</strong>
+                </div>
+            `;
+
+            const modal = document.getElementById('confirmTaskModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeConfirmModal() {
+            pendingNewTaskDraft = null;
+            const modal = document.getElementById('confirmTaskModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function confirmAndCreateTask() {
+            if (!pendingNewTaskDraft) return;
+            const d = pendingNewTaskDraft;
+
+            if (currentUser.balance < d.totalCost) {
+                closeConfirmModal();
+                return showToast("Balans yetarli emas!");
+            }
+
+            currentUser.balance -= d.totalCost;
+            syncCurrentUser();
+
+            const tasks = getTasksDB();
+            tasks.unshift({
+                id: "T-" + Math.floor(1000 + Math.random() * 9000),
+                platform: d.plat,
+                type: d.type,
+                title: d.title,
+                link: d.link,
+                reward: d.reward,
+                doneCount: 0,
+                totalCount: d.count,
+                ownerId: currentUser.id,
+                ownerPhone: currentUser.phone,
+                status: 'active',
+                completedBy: [],
+                createdAt: new Date().toISOString().slice(0, 10)
+            });
+            saveTasksDB(tasks);
+
+            closeConfirmModal();
+            document.getElementById('newTaskTitle').value = '';
+            document.getElementById('newTaskLink').value = '';
+            showToast("Vazifa muvaffaqiyatli joylandi!");
+            renderEarnTasks();
+            renderMyTasks();
+            switchTab('mytasks');
+        }
+
+        // =========================================================================
+        // 6. MY TASKS + FINISH & REFUND
+        // =========================================================================
+        function renderMyTasks() {
+            const tasks = getTasksDB().filter(t => t.ownerId === currentUser.id);
+            const container = document.getElementById('myTasksContainer');
+            refreshHeaderUI();
+
+            if (tasks.length === 0) {
+                container.innerHTML = `<div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-8 text-center text-slate-400 text-xs sm:text-sm">Siz hali hech qanday vazifa yaratmagansiz.</div>`;
+                return;
+            }
+
+            container.innerHTML = tasks.map(t => {
+                const remainingCount = Math.max(0, t.totalCount - t.doneCount);
+                const refundableSum = remainingCount * t.reward;
+                const isFinished = t.status === 'finished' || remainingCount === 0;
+                const percent = Math.min(100, Math.round((t.doneCount / t.totalCount) * 100));
+
+                return `
+                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div class="space-y-1.5 flex-1 min-w-0">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-extrabold px-2.5 py-0.5 rounded-md bg-emerald-500/15 text-emerald-500">${t.platform} • ${t.type}</span>
+                            <span class="text-xs font-bold ${isFinished ? 'text-slate-400' : 'text-sky-500'}">
+                                ${isFinished ? 'Yakunlangan' : 'Faol'}
+                            </span>
+                        </div>
+                        <h4 class="font-bold text-sm sm:text-base break-words">${t.title}</h4>
+                        <a href="${t.link}" target="_blank" class="text-xs text-sky-500 hover:underline truncate block">${t.link}</a>
+                        <div class="text-xs text-slate-400 pt-1">
+                            Bajarildi: <strong class="text-slate-900 dark:text-white">${t.doneCount} / ${t.totalCount}</strong> (${percent}%) • 
+                            1 tasi: <strong>${t.reward} so'm</strong>
+                        </div>
+                    </div>
+
+                    <div class="w-full sm:w-auto flex flex-col sm:items-end gap-2">
+                        ${!isFinished ? `
+                            <div class="text-xs text-slate-400">
+                                Qolgan pul: <strong class="text-emerald-500">${refundableSum.toLocaleString('uz-UZ')} so'm</strong>
+                            </div>
+                            <button onclick="finishMyTaskAndRefund('${t.id}')" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs shadow-md shadow-amber-500/20 transition">
+                                <i class="fa-solid fa-rotate-left mr-1"></i> Yakunlash (+${refundableSum.toLocaleString('uz-UZ')} so'm qaytarish)
+                            </button>
+                        ` : `
+                            <span class="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs font-bold text-slate-400 text-center">
+                                <i class="fa-solid fa-check mr-1"></i> Yakunlangan
+                            </span>
+                        `}
+                    </div>
+                </div>
+                `;
+            }).join('');
+        }
+
+        function finishMyTaskAndRefund(taskId) {
+            const tasks = getTasksDB();
+            const task = tasks.find(t => t.id === taskId && t.ownerId === currentUser.id);
+            if (!task || task.status === 'finished') return;
+
+            const remaining = Math.max(0, task.totalCount - task.doneCount);
+            const refundMoney = remaining * task.reward;
+
+            if (!confirm(`Vazifani to'xtatib, qolgan ${remaining} ta o'rin uchun ${refundMoney.toLocaleString('uz-UZ')} so'mni balansingizga qaytarib olasizmi?`)) return;
+
+            task.status = 'finished';
+            task.totalCount = task.doneCount;
+            saveTasksDB(tasks);
+
+            currentUser.balance = Number(currentUser.balance) + refundMoney;
+            syncCurrentUser();
+
+            showToast(`${refundMoney.toLocaleString('uz-UZ')} so'm balansingizga qaytarildi!`);
+            renderMyTasks();
+            renderEarnTasks();
+        }
+
+        // =========================================================================
+        // 7. WALLET: 3 DEPOSIT METHODS (2 MAINTENANCE + 1 TELEGRAM ADMIN)
+        // =========================================================================
+        function showMaintenanceAlert(methodName) {
+            showToast(`${methodName} orqali to'lovda hozir texnik ishlar olib borilmoqda! Iltimos, 3-usul (Telegram Admin) orqali to'ldiring.`);
+        }
+
+        function setDepositAmount(val) {
+            document.getElementById('depositInput').value = val;
+        }
+
+        function openTelegramDeposit() {
+            const amount = Number(document.getElementById('depositInput').value || 10000);
+            window.open(API_CONFIG.TELEGRAM_ADMIN_DEPOSIT_URL, '_blank');
+            showToast(`Telegram Admin oynasi ochildi (${amount.toLocaleString('uz-UZ')} so'm)`);
+        }
+
+        function handleWithdraw() {
+            const card = document.getElementById('withdrawCard').value.trim();
+            const amount = Number(document.getElementById('withdrawAmount').value);
+            if (card.length < 16) return showToast("Karta raqamini to'liq kiriting!");
+            if (isNaN(amount) || amount < 10000) return showToast("Minimal yechish summasi 10 000 so'm!");
+            if (currentUser.balance < amount) return showToast("Balansingizda yetarli mablag' yo'q!");
+
+            currentUser.balance -= amount;
+            syncCurrentUser();
+            document.getElementById('withdrawAmount').value = '';
+            showToast("So'rov yuborildi! Tez orada kartangizga tushadi.");
+        }
+
+        // =========================================================================
+        // 8. TAB NAVIGATION & THEME
+        // =========================================================================
+        function switchTab(tab) {
+            ['earn', 'create', 'mytasks', 'referral', 'wallet'].forEach(t => {
+                document.getElementById('tab_' + t).classList.toggle('hidden', t !== tab);
+                const sideBtn = document.getElementById('side_' + t);
+                if (sideBtn) {
+                    sideBtn.className = t === tab
+                        ? "w-full flex items-center justify-between px-4 py-3 rounded-xl font-bold text-sm bg-emerald-500 text-white shadow-md shadow-emerald-500/20 transition"
+                        : "w-full flex items-center justify-between px-4 py-3 rounded-xl font-bold text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition";
+                }
+                const mobBtn = document.getElementById('mob_' + t);
+                if (mobBtn) {
+                    mobBtn.className = t === tab
+                        ? "flex flex-col items-center justify-center gap-1 text-emerald-500 font-bold text-[10px]"
+                        : "flex flex-col items-center justify-center gap-1 text-slate-400 font-bold text-[10px]";
+                }
+            });
+            if (tab === 'create') updateMinPriceRule();
+            if (tab === 'mytasks') renderMyTasks();
+            if (tab === 'referral') renderReferralSection();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function showToast(msg) {
+            const box = document.getElementById('toastBox');
+            document.getElementById('toastText').textContent = msg;
+            box.classList.remove('hidden');
+            setTimeout(() => box.classList.add('hidden'), 3200);
+        }
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            const icon = document.getElementById('themeIcon');
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                localStorage.setItem('pultop_theme', 'light');
+                icon.className = 'fa-solid fa-moon text-slate-700 text-sm sm:text-base';
+            } else {
+                html.classList.add('dark');
+                localStorage.setItem('pultop_theme', 'dark');
+                icon.className = 'fa-solid fa-sun text-amber-400 text-sm sm:text-base';
+            }
+        }
+    </script>
+</body>
+</html>

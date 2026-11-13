@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="uz" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PulTop — Admin Boshqaruv Paneli</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = { darkMode: 'class' }
+    </script>
+</head>
+<body class="bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen flex flex-col transition-colors duration-200">
+
+    <!-- ================= ADMIN LOCK SCREEN (949903424 / Soha1212) ================= -->
+    <div id="adminLockScreen" class="fixed inset-0 z-50 bg-slate-950 flex items-center justify-center p-4">
+        <div class="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-8 shadow-2xl text-white">
+            <div class="flex items-center gap-3 mb-6">
+                <div class="w-12 h-12 rounded-xl bg-emerald-500 flex items-center justify-center text-white text-2xl shadow-lg shadow-emerald-500/30">
+                    <i class="fa-solid fa-user-shield"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-extrabold">PulTop Admin Panel</h1>
+                    <p class="text-xs text-slate-400">Maxsus boshqaruv tizimiga kirish</p>
+                </div>
+            </div>
+
+            <div id="loginError" class="hidden mb-4 p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-400 text-sm font-semibold"></div>
+
+            <form onsubmit="verifyDirectAdminLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-400 mb-1.5">Admin Telefon Raqami</label>
+                    <div class="relative flex items-center">
+                        <span class="absolute left-3.5 text-slate-400 font-semibold">+998</span>
+                        <input type="text" id="adminPhoneInput" placeholder="94 990 34 24" required
+                            class="w-full pl-16 pr-4 py-3 rounded-xl bg-slate-800 border border-slate-700 focus:outline-none focus:border-emerald-500 font-semibold text-white">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-400 mb-1.5">Admin Paroli</label>
+                    <input type="password" id="adminPassInput" placeholder="••••••••" required
+                        class="w-full px-4 py-3 rounded-xl bg-slate-800 border border-slate-700 focus:outline-none focus:border-emerald-500 font-semibold text-white">
+                </div>
+                <label class="flex items-center gap-2 cursor-pointer text-sm text-slate-300">
+                    <input type="checkbox" id="adminRemember" checked class="w-4 h-4 accent-emerald-500 rounded">
+                    <span>Meni doim eslab qolish</span>
+                </label>
+                <button type="submit" class="w-full py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 font-bold text-white shadow-lg shadow-emerald-500/25 transition">
+                    Admin Panelga Kirish <i class="fa-solid fa-arrow-right ml-1"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ================= TOP HEADER ================= -->
+    <header class="sticky top-0 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
+        <div class="max-w-[1440px] mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-emerald-500 flex items-center justify-center text-white font-bold text-lg shadow-md">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="font-extrabold text-lg">Pul<span class="text-emerald-500">Top</span></span>
+                        <span class="text-[11px] font-bold uppercase px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-500">Admin</span>
+                    </div>
+                    <p class="text-xs text-slate-400 hidden sm:block">+998 94 990 34 24</p>
+                </div>
+            </div>
+
+            <!-- 3 Main Admin Sections: Users, Tasks, Min Prices -->
+            <div class="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+                <button onclick="switchSection('users')" id="navUsers" class="px-3 py-2 rounded-lg text-xs sm:text-sm font-bold bg-white dark:bg-slate-900 text-emerald-500 shadow-sm transition">
+                    <i class="fa-solid fa-users mr-1"></i>Foydalanuvchilar
+                </button>
+                <button onclick="switchSection('tasks')" id="navTasks" class="px-3 py-2 rounded-lg text-xs sm:text-sm font-bold text-slate-600 dark:text-slate-300">
+                    <i class="fa-solid fa-list-check mr-1"></i>Vazifalar
+                </button>
+                <button onclick="switchSection('prices')" id="navPrices" class="px-3 py-2 rounded-lg text-xs sm:text-sm font-bold text-slate-600 dark:text-slate-300">
+                    <i class="fa-solid fa-sliders mr-1"></i>Min. Narxlar
+                </button>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <a href="index.html" class="px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs font-bold hover:text-emerald-500">
+    <i class="fa-solid fa-up-right-from-square mr-1"></i>Sayt
+</a>
+                <button onclick="toggleTheme()" class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                    <i id="themeIcon" class="fa-solid fa-sun text-amber-400"></i>
+                </button>
+                <button onclick="logoutAdmin()" class="px-3 py-2 rounded-xl bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white text-xs font-bold transition">
+                    <i class="fa-solid fa-power-off"></i> Chiqish
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- ================= MAIN ADMIN BODY ================= -->
+    <main class="flex-1 max-w-[1440px] w-full mx-auto px-4 py-6 space-y-6">
+
+        <!-- KPI Stats -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl">
+                <span class="text-xs font-bold uppercase text-slate-400">Jami Foydalanuvchilar</span>
+                <div id="statTotalUsers" class="text-2xl font-extrabold mt-1">0</div>
+                <p id="statActiveUsers" class="text-xs text-emerald-500 font-semibold mt-0.5">0 ta faol</p>
+            </div>
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl">
+                <span class="text-xs font-bold uppercase text-slate-400">Umumiy Balanslar</span>
+                <div id="statTotalBalance" class="text-2xl font-extrabold mt-1 text-emerald-500">0 so'm</div>
+                <p class="text-xs text-slate-400 mt-0.5">Barcha hamyonlar</p>
+            </div>
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl">
+                <span class="text-xs font-bold uppercase text-slate-400">Jami Vazifalar</span>
+                <div id="statTotalTasks" class="text-2xl font-extrabold mt-1">0</div>
+                <p class="text-xs text-slate-400 mt-0.5">TG / IG / YT</p>
+            </div>
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl">
+                <span class="text-xs font-bold uppercase text-slate-400">Bajarilgan Harakatlar</span>
+                <div id="statCompletedActions" class="text-2xl font-extrabold mt-1 text-sky-500">0</div>
+                <p class="text-xs text-slate-400 mt-0.5">Obuna, layk va izohlar</p>
+            </div>
+        </div>
+
+        <!-- ================= SECTION 1: USERS ================= -->
+        <section id="sectionUsers" class="space-y-4">
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl flex flex-col lg:flex-row gap-3 justify-between">
+                <input type="text" id="userSearchInput" oninput="renderUsers()" placeholder="Telefon raqam bo'yicha qidirish..."
+                    class="flex-1 px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm">
+                <div class="flex flex-wrap gap-2">
+                    <select id="userStatusFilter" onchange="renderUsers()" class="px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-semibold">
+                        <option value="all">Barchasi</option>
+                        <option value="active">Faollar (Active)</option>
+                        <option value="blocked">Bloklanganlar</option>
+                    </select>
+                    <select id="userSortSelect" onchange="renderUsers()" class="px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-semibold">
+                        <option value="date_desc">Yangi ro'yxatdan o'tganlar</option>
+                        <option value="date_asc">Eski ro'yxatdan o'tganlar</option>
+                        <option value="balance_desc">Balansi ko'plar</option>
+                        <option value="balance_asc">Balansi kamlar</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-x-auto">
+                <table class="w-full text-left border-collapse text-sm">
+                    <thead>
+                        <tr class="border-b border-slate-200 dark:border-slate-800 text-[11px] uppercase text-slate-400 bg-slate-50/50 dark:bg-slate-800/40">
+                            <th class="py-3.5 px-4">Foydalanuvchi</th>
+                            <th class="py-3.5 px-4">Paroli</th>
+                            <th class="py-3.5 px-4">Balansi</th>
+                            <th class="py-3.5 px-4">Bajargan / Yaratgan vazifalari</th>
+                            <th class="py-3.5 px-4">Ro'yxatdan o'tgan</th>
+                            <th class="py-3.5 px-4 text-right">Boshqarish</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTableBody" class="divide-y divide-slate-200 dark:divide-slate-800"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ================= SECTION 2: TASKS ================= -->
+        <section id="sectionTasks" class="space-y-4 hidden">
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl flex flex-col sm:flex-row gap-3 justify-between">
+                <input type="text" id="taskSearchInput" oninput="renderTasks()" placeholder="Vazifa nomi, ssilka yoki raqam bo'yicha qidirish..."
+                    class="flex-1 px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm">
+                <button onclick="openTaskModal()" class="px-4 py-2.5 rounded-xl bg-emerald-500 text-white font-bold text-sm">
+                    + Yangi vazifa qo'shish
+                </button>
+            </div>
+
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-x-auto">
+                <table class="w-full text-left border-collapse text-sm">
+                    <thead>
+                        <tr class="border-b border-slate-200 dark:border-slate-800 text-[11px] uppercase text-slate-400 bg-slate-50/50 dark:bg-slate-800/40">
+                            <th class="py-3.5 px-4">Tarmoq / Tur</th>
+                            <th class="py-3.5 px-4">Sarlavha va Ssilka</th>
+                            <th class="py-3.5 px-4">Narxi</th>
+                            <th class="py-3.5 px-4">Bajarildi / Jami</th>
+                            <th class="py-3.5 px-4">Egasi</th>
+                            <th class="py-3.5 px-4 text-right">Amallar</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tasksTableBody" class="divide-y divide-slate-200 dark:divide-slate-800"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ================= SECTION 3: MIN PRICE SETTINGS PER PLATFORM ================= -->
+        <section id="sectionPrices" class="hidden">
+            <div class="max-w-3xl mx-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 space-y-6">
+                <div>
+                    <h2 class="text-xl font-extrabold">Minimal Vazifa Narxlarini Boshqarish (So'm)</h2>
+                    <p class="text-xs text-slate-400 mt-1">
+                        Foydalanuvchilar `index.html` da vazifa yaratayotganda Telegram, Instagram va YouTube uchun minimal narxlarni shu yerdan belgilaysiz.
+                    </p>
+                </div>
+
+                <form onsubmit="saveMinPricesForm(event)" class="space-y-6">
+                    <!-- Telegram -->
+                    <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-3">
+                        <h3 class="font-extrabold text-sm flex items-center gap-2 text-sky-500">
+                            <i class="fa-brands fa-telegram text-lg"></i> Telegram Minimal Narxlari (so'm)
+                        </h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 mb-1">Obuna (Follow)</label>
+                                <input type="number" id="min_Telegram_Obuna" required min="1" class="w-full px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-bold">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 mb-1">Layk (Like)</label>
+                                <input type="number" id="min_Telegram_Layk" required min="1" class="w-full px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-bold">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 mb-1">Izoh (Comment)</label>
+                                <input type="number" id="min_Telegram_Izoh" required min="1" class="w-full px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-bold">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Instagram -->
+                    <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-3">
+                        <h3 class="font-extrabold text-sm flex items-center gap-2 text-pink-500">
+                            <i class="fa-brands fa-instagram text-lg"></i> Instagram Minimal Narxlari (so'm)
+                        </h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 mb-1">Obuna (Follow)</label>
+                                <input type="number" id="min_Instagram_Obuna" required min="1" class="w-full px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-bold">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 mb-1">Layk (Like)</label>
+                                <input type="number" id="min_Instagram_Layk" required min="1" class="w-full px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-bold">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 mb-1">Izoh (Comment)</label>
+                                <input type="number" id="min_Instagram_Izoh" required min="1" class="w-full px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-bold">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- YouTube -->
+                    <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-3">
+                        <h3 class="font-extrabold text-sm flex items-center gap-2 text-rose-500">
+                            <i class="fa-brands fa-youtube text-lg"></i> YouTube Minimal Narxlari (so'm)
+                        </h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 mb-1">Obuna (Follow)</label>
+                                <input type="number" id="min_YouTube_Obuna" required min="1" class="w-full px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-bold">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 mb-1">Layk (Like)</label>
+                                <input type="number" id="min_YouTube_Layk" required min="1" class="w-full px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-bold">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 mb-1">Izoh (Comment)</label>
+                                <input type="number" id="min_YouTube_Izoh" required min="1" class="w-full px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-bold">
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold shadow-lg shadow-emerald-500/25 transition">
+                        <i class="fa-solid fa-floppy-disk mr-1.5"></i> Minimal narxlarni saqlash
+                    </button>
+                </form>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- USER EDIT MODAL -->
+    <div id="userEditModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-lg w-full p-6 space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-3">
+                <h3 class="font-extrabold text-lg" id="modalUserPhone">Foydalanuvchi</h3>
+                <button onclick="closeModal('userEditModal')" class="text-slate-400 hover:text-rose-500"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+
+            <div class="p-3.5 rounded-xl bg-emerald-500/10 flex justify-between items-center">
+                <span class="text-xs font-bold uppercase text-emerald-500">Hozirgi balansi:</span>
+                <span id="modalCurrentBalance" class="text-xl font-extrabold text-emerald-500">0 so'm</span>
+            </div>
+
+            <div class="space-y-2">
+                <label class="text-xs font-bold uppercase text-slate-400">Balansni boshqarish (So'm)</label>
+                <input type="number" id="balanceChangeInput" placeholder="Summani kiriting" class="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-bold">
+                <div class="grid grid-cols-3 gap-2">
+                    <button onclick="applyBalanceChange('add')" class="py-2 rounded-xl bg-emerald-500 text-white font-bold text-xs">+ Qo'shish</button>
+                    <button onclick="applyBalanceChange('reduce')" class="py-2 rounded-xl bg-amber-500 text-white font-bold text-xs">- Ayirish</button>
+                    <button onclick="applyBalanceChange('set')" class="py-2 rounded-xl bg-sky-500 text-white font-bold text-xs">= O'rnatish</button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 pt-2">
+                <div>
+                    <label class="text-xs font-bold uppercase text-slate-400">Telefon raqami</label>
+                    <input type="text" id="editUserPhoneInput" class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-bold">
+                </div>
+                <div>
+                    <label class="text-xs font-bold uppercase text-slate-400">Paroli</label>
+                    <input type="text" id="editUserPassInput" class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-bold">
+                </div>
+            </div>
+
+            <div class="flex justify-between items-center pt-3 border-t border-slate-200 dark:border-slate-800">
+                <label class="flex items-center gap-2 text-sm font-bold">
+                    <input type="checkbox" id="editUserActiveCheck" class="w-4 h-4 accent-emerald-500"> Faol (Active)
+                </label>
+                <button onclick="saveUserCredentials()" class="px-5 py-2.5 rounded-xl bg-emerald-500 text-white font-bold text-sm">Saqlash</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- USER HISTORY MODAL -->
+    <div id="userHistoryModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-xl w-full p-6 space-y-4 max-h-[85vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-3">
+                <h3 class="font-extrabold text-lg" id="historyModalTitle">Faoliyat tarixi</h3>
+                <button onclick="closeModal('userHistoryModal')" class="text-slate-400 hover:text-rose-500"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div>
+                <h4 class="text-xs font-bold uppercase text-emerald-500 mb-2">Bajargan vazifalari va vaqti:</h4>
+                <div id="userCompletedList" class="space-y-2"></div>
+            </div>
+            <div class="pt-3 border-t border-slate-200 dark:border-slate-800">
+                <h4 class="text-xs font-bold uppercase text-sky-500 mb-2">O'zi yaratgan vazifalari:</h4>
+                <div id="userCreatedList" class="space-y-2"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TASK EDIT/CREATE MODAL -->
+    <div id="taskModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-lg w-full p-6 space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-3">
+                <h3 class="font-extrabold text-lg">Vazifani boshqarish</h3>
+                <button onclick="closeModal('taskModal')" class="text-slate-400 hover:text-rose-500"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <form onsubmit="saveTaskForm(event)" class="space-y-3">
+                <input type="hidden" id="editTaskId">
+                <div class="grid grid-cols-2 gap-3">
+                    <select id="taskPlatformInput" class="px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-bold text-sm">
+                        <option value="Telegram">Telegram</option>
+                        <option value="Instagram">Instagram</option>
+                        <option value="YouTube">YouTube</option>
+                    </select>
+                    <select id="taskTypeInput" class="px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-bold text-sm">
+                        <option value="Obuna">Obuna</option>
+                        <option value="Layk">Layk</option>
+                        <option value="Izoh">Izoh</option>
+                    </select>
+                </div>
+                <input type="text" id="taskTitleInput" required placeholder="Vazifa sarlavhasi" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-semibold">
+                <input type="url" id="taskLinkInput" required placeholder="https://..." class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-semibold">
+                <div class="grid grid-cols-3 gap-2">
+                    <div>
+                        <label class="text-[11px] font-bold text-slate-400">Narxi (so'm)</label>
+                        <input type="number" id="taskRewardInput" required class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-bold text-emerald-500">
+                    </div>
+                    <div>
+                        <label class="text-[11px] font-bold text-slate-400">Bajarildi</label>
+                        <input type="number" id="taskDoneInput" required class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-bold">
+                    </div>
+                    <div>
+                        <label class="text-[11px] font-bold text-slate-400">Jami Soni</label>
+                        <input type="number" id="taskTotalInput" required class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-bold">
+                    </div>
+                </div>
+                <button type="submit" class="w-full py-3 rounded-xl bg-emerald-500 text-white font-bold text-sm">Saqlash</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="toastBox" class="fixed bottom-5 right-5 z-50 hidden px-4 py-3 rounded-xl bg-slate-900 text-white border border-emerald-500/40 shadow-xl text-sm font-bold">
+        <span id="toastText">Saqlandi!</span>
+    </div>
+
+    <script>
+        const ADMIN_PHONE = "949903424";
+        const ADMIN_PASS  = "Soha1212";
+
+        const DEFAULT_MIN_PRICES = {
+            Telegram:  { Obuna: 100, Layk: 50, Izoh: 50 },
+            Instagram: { Obuna: 100, Layk: 50, Izoh: 50 },
+            YouTube:   { Obuna: 100, Layk: 50, Izoh: 50 }
+        };
+
+        let users = [];
+        let tasks = [];
+        let minPrices = {};
+        let currentEditingUserId = null;
+
+        function loadAllData() {
+            users = JSON.parse(localStorage.getItem('pultop_db_users')) || [];
+            tasks = JSON.parse(localStorage.getItem('pultop_db_tasks')) || [];
+            minPrices = JSON.parse(localStorage.getItem('pultop_db_min_prices')) || DEFAULT_MIN_PRICES;
+            updateStats();
+        }
+
+        function saveAllData() {
+            localStorage.setItem('pultop_db_users', JSON.stringify(users));
+            localStorage.setItem('pultop_db_tasks', JSON.stringify(tasks));
+            localStorage.setItem('pultop_db_min_prices', JSON.stringify(minPrices));
+            updateStats();
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            if (localStorage.getItem('pultop_theme') === 'light') {
+                document.documentElement.classList.remove('dark');
+                document.getElementById('themeIcon').className = 'fa-solid fa-moon text-slate-700';
+            }
+
+            const savedAdmin = localStorage.getItem('pultop_admin_remember') || sessionStorage.getItem('pultop_admin_session');
+            if (savedAdmin) {
+                document.getElementById('adminLockScreen').classList.add('hidden');
+            }
+
+            loadAllData();
+            renderUsers();
+            renderTasks();
+            populateMinPricesForm();
+        });
+
+        function verifyDirectAdminLogin(e) {
+            e.preventDefault();
+            const rawPhone = document.getElementById('adminPhoneInput').value.replace(/\D/g, '');
+            const cleanDigits = rawPhone.startsWith('998') ? rawPhone.slice(3) : rawPhone;
+            const pass = document.getElementById('adminPassInput').value;
+            const remember = document.getElementById('adminRemember').checked;
+
+            if (cleanDigits === ADMIN_PHONE && pass === ADMIN_PASS) {
+                const adminData = { id: "ADMIN-1", phone: "+998 94 990 34 24", role: "admin" };
+                sessionStorage.setItem('pultop_admin_session', JSON.stringify(adminData));
+                if (remember) localStorage.setItem('pultop_admin_remember', JSON.stringify(adminData));
+                document.getElementById('adminLockScreen').classList.add('hidden');
+                showToast("Xush kelibsiz, Admin!");
+            } else {
+                const err = document.getElementById('loginError');
+                err.textContent = "Raqam (949903424) yoki parol (Soha1212) noto'g'ri!";
+                err.classList.remove('hidden');
+            }
+        }
+
+        function logoutAdmin() {
+    localStorage.removeItem('pultop_admin_remember');
+    sessionStorage.removeItem('pultop_admin_session');
+    window.location.href = 'index.html';
+}
+
+        function updateStats() {
+            document.getElementById('statTotalUsers').textContent = users.length;
+            document.getElementById('statActiveUsers').textContent = users.filter(u => u.active !== false).length + " ta faol";
+            const totalBal = users.reduce((s, u) => s + Number(u.balance || 0), 0);
+            document.getElementById('statTotalBalance').textContent = totalBal.toLocaleString('uz-UZ') + " so'm";
+            document.getElementById('statTotalTasks').textContent = tasks.length;
+            const totalDone = tasks.reduce((s, t) => s + Number(t.doneCount || 0), 0);
+            document.getElementById('statCompletedActions').textContent = totalDone;
+        }
+
+        // USERS TABLE
+        function renderUsers() {
+            const q = document.getElementById('userSearchInput').value.toLowerCase().replace(/\s/g, '');
+            const status = document.getElementById('userStatusFilter').value;
+            const sort = document.getElementById('userSortSelect').value;
+
+            let list = users.filter(u => {
+                const matchQ = u.phone.toLowerCase().replace(/\s/g, '').includes(q) || u.id.toLowerCase().includes(q);
+                const matchS = status === 'all' ? true : (status === 'active' ? u.active !== false : u.active === false);
+                return matchQ && matchS;
+            });
+
+            list.sort((a, b) => {
+                if (sort === 'balance_desc') return b.balance - a.balance;
+                if (sort === 'balance_asc') return a.balance - b.balance;
+                if (sort === 'date_asc') return new Date(a.joinedAt) - new Date(b.joinedAt);
+                return new Date(b.joinedAt) - new Date(a.joinedAt);
+            });
+
+            const tbody = document.getElementById('usersTableBody');
+            if (list.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="py-8 text-center text-slate-400">Foydalanuvchilar topilmadi.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = list.map(u => {
+                const createdCount = tasks.filter(t => t.ownerId === u.id || t.ownerPhone === u.phone).length;
+                const doneList = u.completedTasks || [];
+                const lastTime = doneList.length > 0 ? doneList[doneList.length - 1].time : "Hali bajarmagan";
+
+                return `
+                <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40">
+                    <td class="py-3.5 px-4">
+                        <div class="font-bold">${u.phone}</div>
+                        <div class="text-xs text-slate-400">${u.id} • ${u.active !== false ? '<span class="text-emerald-500">Faol</span>' : '<span class="text-rose-500">Bloklangan</span>'}</div>
+                    </td>
+                    <td class="py-3.5 px-4 font-mono font-bold text-amber-500">${u.password}</td>
+                    <td class="py-3.5 px-4 font-extrabold text-emerald-500">${Number(u.balance).toLocaleString('uz-UZ')} so'm</td>
+                    <td class="py-3.5 px-4 text-xs">
+                        <div>Bajargan: <b>${doneList.length}</b> • Yaratgan: <b>${createdCount}</b></div>
+                        <div class="text-slate-400">Oxirgi: ${lastTime}</div>
+                        <button onclick="openUserHistoryModal('${u.id}')" class="text-sky-500 font-bold hover:underline mt-0.5">Tarixni ko'rish</button>
+                    </td>
+                    <td class="py-3.5 px-4 text-xs text-slate-400">${u.joinedAt}</td>
+                    <td class="py-3.5 px-4 text-right space-x-1">
+                        <button onclick="openUserEditModal('${u.id}')" class="px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-500 font-bold text-xs">Boshqarish</button>
+                        <button onclick="deleteUser('${u.id}')" class="p-1.5 rounded-lg bg-rose-500/10 text-rose-500 text-xs"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr>
+                `;
+            }).join('');
+        }
+
+        function openUserEditModal(id) {
+            const u = users.find(x => x.id === id);
+            if (!u) return;
+            currentEditingUserId = id;
+            document.getElementById('modalUserPhone').textContent = u.phone;
+            document.getElementById('modalCurrentBalance').textContent = Number(u.balance).toLocaleString('uz-UZ') + " so'm";
+            document.getElementById('balanceChangeInput').value = '';
+            document.getElementById('editUserPhoneInput').value = u.phone;
+            document.getElementById('editUserPassInput').value = u.password;
+            document.getElementById('editUserActiveCheck').checked = u.active !== false;
+            openModal('userEditModal');
+        }
+
+        function applyBalanceChange(mode) {
+            const u = users.find(x => x.id === currentEditingUserId);
+            const val = Number(document.getElementById('balanceChangeInput').value);
+            if (!u || isNaN(val) || val < 0) return;
+
+            if (mode === 'add') u.balance = Number(u.balance) + val;
+            if (mode === 'reduce') u.balance = Math.max(0, Number(u.balance) - val);
+            if (mode === 'set') u.balance = val;
+
+            document.getElementById('modalCurrentBalance').textContent = Number(u.balance).toLocaleString('uz-UZ') + " so'm";
+            saveAllData();
+            renderUsers();
+            showToast("Balans yangilandi!");
+        }
+
+        function saveUserCredentials() {
+            const u = users.find(x => x.id === currentEditingUserId);
+            if (!u) return;
+            u.phone = document.getElementById('editUserPhoneInput').value.trim();
+            u.cleanPhone = u.phone.replace(/\D/g, '').slice(-9);
+            u.password = document.getElementById('editUserPassInput').value.trim();
+            u.active = document.getElementById('editUserActiveCheck').checked;
+            saveAllData();
+            renderUsers();
+            closeModal('userEditModal');
+            showToast("Foydalanuvchi saqlandi!");
+        }
+
+        function deleteUser(id) {
+            if (!confirm("Foydalanuvchini o'chirasizmi?")) return;
+            users = users.filter(u => u.id !== id);
+            saveAllData();
+            renderUsers();
+            showToast("O'chirildi!");
+        }
+
+        function openUserHistoryModal(id) {
+            const u = users.find(x => x.id === id);
+            if (!u) return;
+            document.getElementById('historyModalTitle').textContent = u.phone + " — Tarix";
+            const done = u.completedTasks || [];
+            document.getElementById('userCompletedList').innerHTML = done.length === 0
+                ? `<p class="text-xs text-slate-400">Hali vazifa bajarmagan</p>`
+                : done.map(d => `<div class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 flex justify-between text-xs"><span><b>${d.title}</b> (${d.time})</span><b class="text-emerald-500">+${d.reward} so'm</b></div>`).join('');
+
+            const created = tasks.filter(t => t.ownerId === u.id || t.ownerPhone === u.phone);
+            document.getElementById('userCreatedList').innerHTML = created.length === 0
+                ? `<p class="text-xs text-slate-400">Vazifa yaratmagan</p>`
+                : created.map(t => `<div class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 flex justify-between text-xs"><span><b>[${t.platform} ${t.type}]</b> ${t.title}</span><b>${t.doneCount}/${t.totalCount} (${t.reward} so'm)</b></div>`).join('');
+
+            openModal('userHistoryModal');
+        }
+
+        // TASKS MANAGEMENT
+        function renderTasks() {
+            const q = document.getElementById('taskSearchInput').value.toLowerCase();
+            const list = tasks.filter(t => t.title.toLowerCase().includes(q) || t.link.toLowerCase().includes(q) || (t.ownerPhone || '').toLowerCase().includes(q));
+            const tbody = document.getElementById('tasksTableBody');
+
+            tbody.innerHTML = list.map(t => `
+                <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40">
+                    <td class="py-3.5 px-4 font-bold text-xs">${t.platform} • <span class="text-emerald-500">${t.type}</span></td>
+                    <td class="py-3.5 px-4">
+                        <div class="font-bold">${t.title}</div>
+                        <a href="${t.link}" target="_blank" class="text-xs text-sky-500 hover:underline">${t.link}</a>
+                    </td>
+                    <td class="py-3.5 px-4 font-extrabold text-emerald-500">${t.reward} so'm</td>
+                    <td class="py-3.5 px-4 text-xs font-bold">${t.doneCount} / ${t.totalCount}</td>
+                    <td class="py-3.5 px-4 text-xs">${t.ownerPhone || 'Admin'}</td>
+                    <td class="py-3.5 px-4 text-right space-x-1">
+                        <button onclick="openTaskModal('${t.id}')" class="px-3 py-1.5 rounded-lg bg-sky-500/10 text-sky-500 font-bold text-xs">Tahrirlash</button>
+                        <button onclick="deleteTask('${t.id}')" class="p-1.5 rounded-lg bg-rose-500/10 text-rose-500 text-xs"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function openTaskModal(id = null) {
+            if (id) {
+                const t = tasks.find(x => x.id === id);
+                if (!t) return;
+                document.getElementById('editTaskId').value = t.id;
+                document.getElementById('taskPlatformInput').value = t.platform;
+                document.getElementById('taskTypeInput').value = t.type;
+                document.getElementById('taskTitleInput').value = t.title;
+                document.getElementById('taskLinkInput').value = t.link;
+                document.getElementById('taskRewardInput').value = t.reward;
+                document.getElementById('taskDoneInput').value = t.doneCount;
+                document.getElementById('taskTotalInput').value = t.totalCount;
+            } else {
+                document.getElementById('editTaskId').value = '';
+                document.getElementById('taskTitleInput').value = '';
+                document.getElementById('taskLinkInput').value = 'https://t.me/';
+                document.getElementById('taskRewardInput').value = 100;
+                document.getElementById('taskDoneInput').value = 0;
+                document.getElementById('taskTotalInput').value = 100;
+            }
+            openModal('taskModal');
+        }
+
+        function saveTaskForm(e) {
+            e.preventDefault();
+            const id = document.getElementById('editTaskId').value;
+            const obj = {
+                id: id || ("T-" + Math.floor(1000 + Math.random() * 9000)),
+                platform: document.getElementById('taskPlatformInput').value,
+                type: document.getElementById('taskTypeInput').value,
+                title: document.getElementById('taskTitleInput').value.trim(),
+                link: document.getElementById('taskLinkInput').value.trim(),
+                reward: Number(document.getElementById('taskRewardInput').value),
+                doneCount: Number(document.getElementById('taskDoneInput').value),
+                totalCount: Number(document.getElementById('taskTotalInput').value),
+                ownerId: "ADMIN",
+                ownerPhone: "+998 94 990 34 24 (Admin)",
+                status: "active",
+                completedBy: [],
+                createdAt: new Date().toISOString().slice(0, 10)
+            };
+
+            if (id) {
+                const idx = tasks.findIndex(x => x.id === id);
+                if (idx > -1) tasks[idx] = { ...tasks[idx], ...obj };
+            } else {
+                tasks.unshift(obj);
+            }
+            saveAllData();
+            renderTasks();
+            closeModal('taskModal');
+            showToast("Vazifa saqlandi!");
+        }
+
+        function deleteTask(id) {
+            if (!confirm("Vazifani o'chirasizmi?")) return;
+            tasks = tasks.filter(t => t.id !== id);
+            saveAllData();
+            renderTasks();
+            showToast("Vazifa o'chirildi!");
+        }
+
+        // MIN PRICE SETTINGS (TG, IG, YT × Obuna, Layk, Izoh)
+        function populateMinPricesForm() {
+            ['Telegram', 'Instagram', 'YouTube'].forEach(plat => {
+                ['Obuna', 'Layk', 'Izoh'].forEach(type => {
+                    const el = document.getElementById(`min_${plat}_${type}`);
+                    if (el) el.value = minPrices[plat][type];
+                });
+            });
+        }
+
+        function saveMinPricesForm(e) {
+            e.preventDefault();
+            ['Telegram', 'Instagram', 'YouTube'].forEach(plat => {
+                ['Obuna', 'Layk', 'Izoh'].forEach(type => {
+                    const val = Number(document.getElementById(`min_${plat}_${type}`).value);
+                    minPrices[plat][type] = val;
+                });
+            });
+            saveAllData();
+            showToast("Minimal narxlar saqlandi! Endi index.html da amal qiladi.");
+        }
+
+        function switchSection(sec) {
+            ['users', 'tasks', 'prices'].forEach(s => {
+                document.getElementById('section' + s.charAt(0).toUpperCase() + s.slice(1)).classList.toggle('hidden', s !== sec);
+                const btn = document.getElementById('nav' + s.charAt(0).toUpperCase() + s.slice(1));
+                btn.className = s === sec
+                    ? "px-3 py-2 rounded-lg text-xs sm:text-sm font-bold bg-white dark:bg-slate-900 text-emerald-500 shadow-sm transition"
+                    : "px-3 py-2 rounded-lg text-xs sm:text-sm font-bold text-slate-600 dark:text-slate-300";
+            });
+        }
+
+        function openModal(id) {
+            const m = document.getElementById(id);
+            m.classList.remove('hidden');
+            m.classList.add('flex');
+        }
+        function closeModal(id) {
+            const m = document.getElementById(id);
+            m.classList.add('hidden');
+            m.classList.remove('flex');
+        }
+        function showToast(msg) {
+            const box = document.getElementById('toastBox');
+            document.getElementById('toastText').textContent = msg;
+            box.classList.remove('hidden');
+            setTimeout(() => box.classList.add('hidden'), 2800);
+        }
+        function toggleTheme() {
+            const html = document.documentElement;
+            const icon = document.getElementById('themeIcon');
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                localStorage.setItem('pultop_theme', 'light');
+                icon.className = 'fa-solid fa-moon text-slate-700';
+            } else {
+                html.classList.add('dark');
+                localStorage.setItem('pultop_theme', 'dark');
+                icon.className = 'fa-solid fa-sun text-amber-400';
+            }
+        }
+    </script>
+</body>
+</html>
